@@ -1,0 +1,138 @@
+####################################### DATASETS #######################################
+DATASETS:
+  TRAIN: 'VatexDataset'
+  VAL: 'VatexDataset'
+  TEST: 'VatexDataset'
+
+###################################### DATALOADER ######################################
+DATALOADER:
+  TRAIN_BATCH_SIZE: 128 #训练的batch size
+  TEST_BATCH_SIZE: 256 #测试的batch size
+  NUM_WORKERS: 4
+  FEATS_FOLDER: "/data16t/wangtao/dataset/xmodaler-VATEX/InceptionResnetv2/"
+  MOTION_FEATS_FOLDER: "/data16t/wangtao/dataset/xmodaler-VATEX/Resnext/"
+  OBJECT_FEATS_FOLDER: "/data16t/wangtao/dataset/xmodaler-VATEX/Faster-rcnn-npy/"
+  # FEATS_FOLDER: "/datasets/vatex/features/InceptionResnetv2/"
+  # MOTION_FEATS_FOLDER: "/datasets/vatex/features/Resnext/"
+  # OBJECT_FEATS_FOLDER: "/datasets/vatex/features/Faster-rcnn-npy/"
+  ANNO_FOLDER: '/home/wangtao/video_caption/video_captioning/dataset/vatex/full_supervision'
+  SEQ_PER_SAMPLE: 1
+  MAX_FEAT_NUM: 30 #最大视频帧数 
+  MAX_OBJECT_NUM: 40 #最大目标数 20/380
+  MIN_OBJECT_NUM: 30 #最小目标数，和最大视频帧数保持一致
+  TRAIN_PERCENTAGE: 1.0
+  C3D: True
+  FASTER_R_CNN: True
+
+######################################### Engine #########################################
+ENGINE:
+  NAME: 'DefaultTrainer'
+
+######################################### Scheduled sampling #########################################
+SCHEDULED_SAMPLING: 
+  START_EPOCH: 0
+  INC_EVERY_EPOCH: 5
+  INC_PROB: 0.05
+  MAX_PROB: 0.25
+
+######################################### MODEL #########################################
+MODEL:
+  WEIGHTS: '/home/wangtao/video_caption/video_captioning/checkpoint/vatex/full_supervision/model_final.pth'
+  VOCAB_SIZE: 21784
+  META_ARCHITECTURE: 'TransformerEncoderDecoder'
+  ENCODER: 'TransformerObjectEncoder'
+  ENCODER_DIM: 768 #Transformer Encoder维度
+  DECODER: 'TransformerDecoder'
+  DECODER_DIM: 768 #Transformer Dncoder维度
+  PREDICTOR: 'BasePredictor'
+  PRED_DROPOUT: 0.5
+  MAX_SEQ_LEN: 21 #最大生成语句长度
+  TYPE: 'bert'
+  PRE_PARAMETERS: False
+
+#################################### Token embedding ####################################
+  TOKEN_EMBED: #单词特征编码器
+    NAME: 'TokenBaseEmbedding'
+    DIM: 768
+    ACTIVATION: 'none'
+    USE_NORM: True
+    DROPOUT: 0.1
+    POSITION: 'SinusoidEncoding'
+    # EMBEDDING_WEIGHTS: '/home/wangtao/video_caption/xmodaler-master/open_source_dataset/open_source_dataset_test/msvd_dataset/embedding_weights.pkl'
+
+#################################### Visual embedding ####################################
+  VISUAL_EMBED: #视觉特征编码器
+    NAME: 'ConcatVisualBaseEmbedding'
+    IN_DIM: 1536 #512
+    MOTION_IN_DIM: 2048
+    OBJECT_IN_DIM: 2048
+    EMBEDDINGS_DIM: 1536
+    OUT_DIM: 768
+    ACTIVATION: 'relu'
+    USE_NORM: True
+    DROPOUT: 0.5
+    CONCAT_METHOD: 'transformer'
+
+####################################### BERT ############################################
+  BERT: 
+    HIDDEN_SIZE: 768 
+    HIDDEN_DROPOUT_PROB: 0.1
+    HIDDEN_ACT: "relu"
+    NUM_ATTENTION_HEADS: 8
+    INTERMEDIATE_SIZE: 2048 #3072
+    INTERMEDIATE_DROP: 0.1
+    FFN_DROPOUT_PROB: 0.1
+    ATTENTION_PROBS_DROPOUT_PROB: 0.1
+    NUM_HIDDEN_LAYERS: 2 #Bert层数
+    NUM_GENERATION_LAYERS: 2
+    NUM_ENCODER_OLAYERS: 2 #目标模块层数
+    NUM_DECODER_OLAYERS: 2
+
+####################################### Optimizer #######################################
+SOLVER: #优化器
+  NAME: 'Adam'
+  EPOCH: 35
+  CHECKPOINT_PERIOD: 1
+  EVAL_PERIOD: 1
+  BASE_LR: 0.0001
+  BIAS_LR_FACTOR: 1.0
+  WEIGHT_DECAY: 0.0
+  WEIGHT_DECAY_NORM: 0.0
+  WEIGHT_DECAY_BIAS: 0.0
+  MOMENTUM: 0.9
+  DAMPENING: 0.0
+  NESTEROV: 0.0
+  BETAS: [0.9, 0.999]
+  EPS: 1e-8
+  GRAD_CLIP: 0.1
+  GRAD_CLIP_TYPE: 'value'
+  NORM_TYPE: 2.0
+
+####################################### lr scheduler ####################################### 
+LR_SCHEDULER:
+  NAME: 'WarmupLinear'
+  WARMUP: 5
+
+####################################### losses ####################################### 
+LOSSES:
+  NAMES: ['LabelSmoothing']
+  LABELSMOOTHING: 0.1
+
+####################################### decode strategy ####################################### 
+DECODE_STRATEGY:
+  NAME: 'BeamSearcher'
+  BEAM_SIZE: 5
+  BOS_TOKEN_ID: 1
+  EOS_TOKEN_ID: 0
+
+####################################### evaluation ####################################### 
+INFERENCE:
+  NAME: 'COCOEvaler'
+  VOCAB: '/home/wangtao/video_caption/video_captioning/dataset/vatex/full_supervision/vocabulary.txt'
+  ID_KEY: 'image_id'
+  VALUE: 'caption'
+  VAL_ANNFILE: '/home/wangtao/video_caption/video_captioning/dataset/vatex/full_supervision/captions_val.json'
+  TEST_ANNFILE: '/home/wangtao/video_caption/video_captioning/dataset/vatex/full_supervision/captions_test.json'
+  GENERATION_MODE: True
+
+# OUTPUT_DIR:  '/home/wangtao/video_caption/xmodaler-master/experiments/test1'
