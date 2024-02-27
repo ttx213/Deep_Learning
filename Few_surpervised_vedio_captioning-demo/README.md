@@ -212,7 +212,7 @@ The Few supervision provides one ground truth and one pseudo labels.
 ### 2. Qualitative results on VATEX
 
 <p align="center">
-<img src="qualitative_results_vatex.png" width="800"> <br>
+<img src="qualitative_results_vatex_methods_comparison.pdf" width="800"> <br>
 </p>
 
 ## **Acknowledgement:**
